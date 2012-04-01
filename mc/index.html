@@ -54,16 +54,16 @@
 <div id='doc'>
 
 <a name="mc"></a>
-<h2>Memcache Client</h2>
+<h2>mc - The Memcache Client for Node.js</h2>
 
 <a name="intro"></a>
 <h3>Introduction</h3>
 
-<p>A correct, performant memcache client that emphasizes stability and simplicity over large-system features such as 
-sharding and consistent hashing. The expectation is that developers handling distributed data sets will prefer to 
-handle sharding or consistent hashing with their own logic&mdash;or may have legacy distribution strategies in 
-place already. One additional feature of this client is the guarantee of handling binary memcache values correctly 
-over the simple ascii protocol. This client does not implement the new binary protocol.</p>
+<p><tt>mc</tt> is a correct, performant memcache client for node.js that emphasizes stability, simplicity, and 
+flexibility over a prescriptive approach to distributed storage. The expectation is that developers handling 
+distributed data sets will prefer to  handle sharding or consistent hashing with their own logic&mdash;or may have 
+legacy strategies in place already. One additional feature of this client is the guarantee of handling binary 
+memcache values correctly over the simple ascii protocol. This client does not implement the new binary protocol.</p>
 
 <p>Specifically, this client implements the memcache text protocol specified in the <a href="https://github.com/memcached/memcached/blob/master/doc/protocol.txt">memcached project</a>.</p>
 
