@@ -1,0 +1,88 @@
+
+.header a {
+  text-decoration: none;
+  color: #000000;
+}
+
+#toc {
+  position: fixed;
+  top: 36px;
+  left: 12px;
+  bottom: 25px;
+  width: 224px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-size: 1em;
+  font-weight: normal;
+  padding: 8px;
+  font-family: Verdana, sans-serif;
+  
+}
+
+#toc a {
+  text-decoration: none;
+  color: #400060;
+}
+
+#toc a:hover {
+  text-decoration: underline;
+  color: #A00020;
+}
+
+#toc h3 {
+  padding: 8px 0px 0px 16px;
+  font-size: 0.95em;
+  font-weight: normal;
+}
+
+#toc h4 {
+  padding: 8px 0px 0px 24px;
+  font-size: 0.85em;
+  font-weight: normal;
+}
+
+#toc h5 {
+  padding: 8px 0px 0px 32px;
+  font-size: 0.75em;
+  font-weight: normal;
+}
+
+#doc {
+  padding-left: 244px;
+  background: #EBE9FF;
+}
+
+#doc h3 {
+  background: #DBD8F6;
+  border-bottom: 1px solid #B0B0E0;
+  margin: 16px 0px;
+  padding: 2px 4px;;
+}
+
+#doc h4 {
+  font-size: 0.9em;
+  margin: 12px 0px;
+  padding: 2px 4px;
+  background: #E2DDF8;
+  border-bottom: 1px solid #C0C0E8;
+  width: 90%;
+}
+
+#doc h5 {
+  font-size: 0.8em;
+  margin: 8px 0px;
+  padding: 2px 4px;
+  background: #E6E4FA;
+  width: 85%;
+  border-bottom: 1px solid #D8D8F0;
+}
+
+#doc .cmd {
+  width: 90%;
+  background: #EEEEEE;
+  border: 1px solid #CCCCCC;
+  font-family: monospace;
+  padding: 2px;
+  border-radius: 2px;
+  margin: 3px 8px;
+}

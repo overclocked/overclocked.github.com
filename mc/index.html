@@ -1,0 +1,455 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel=stylesheet href='../overclocked.css' type='text/css'>
+  <link rel=stylesheet href='../sh/styles/shCore.css' type='text/css'>
+  <link rel=stylesheet href='../sh/styles/shThemeDefault.css' type='text/css'>
+  <script type="text/javascript" src="../sh/scripts/shCore.js"></script>
+  <script type="text/javascript" src="../sh/scripts/shBrushJScript.js"></script>
+  <script type="text/javascript">
+     SyntaxHighlighter.all()
+  </script> 
+  <link rel=stylesheet href='../docs.css' type='text/css'>
+</head>
+<body>
+<div class="header">
+  <div class="hconstrain">
+    <h1><a href='http://overclocked.com'>overclocked</a></h1>
+    <div class="tagline">Exceeding the Manufacturer's Specifications</div>
+  </div>
+</div>
+
+<div class="content">
+<div id='toc'>
+<h2>Contents</h2>
+<h3><a href='#mc'>Memcache Client</a></h3>
+<h3><a href-"#intro">Introduction</a></h3>
+<h3><a href='#status'>Status</h3>
+<h3><a href='#install'>Install</h3>
+<h3><a href='#usage'>Usage</h3>
+<h4><a href='#create'>Creation</h4>
+<h4><a href='#conn'>Connection</h4>
+<h5><a href='#conn-localhost'>... to localhost</a></h5>
+<h5><a href='#conn-host'>... to specified host</a></h5>
+<h5><a href='#conn-default-strategy'>... to an array of hosts</a></h5>
+<h5><a href='#conn-no-adapter'>.. without an adapter</a></h5>
+<h4><a href='#error'>Error Responses</a></h4>
+<h4><a href='#write'>Write Operations</a></h4>
+<h5><a href='#set'>Set, CAS, etc.</a></h5>
+<h5><a href='#incr'>Increment, Decrement</a></h5>
+<h4><a href='#read'>Read Operations</a></h4>
+<h5><a href='#get'>Get, Gets</a></h5>
+<h4><a href='#misc'>Miscellaneous</a></h4>
+<h5><a href='#version'>Version</a></h5>
+<h5><a href='#stats'>Stats</a></h5>
+<h5><a href='#subcommands'>Subcommands</a></h5>
+<h3><a href='#adapters'>Adapters</a></h3>
+<h3><a href='#strategies'>Strategies</a></h3>
+<h3><a href='#testing'>Testing</a></h3>
+<h3><a href='#changelog'>Change Log</a></h3>
+</div>
+
+<div id='doc'>
+
+<a name="mc"></a>
+<h2>Memcache Client</h2>
+
+<a name="intro"></a>
+<h3>Introduction</h3>
+
+<p>A correct, performant memcache client that emphasizes stability and simplicity over large-system features such as 
+sharding and consistent hashing. The expectation is that developers handling distributed data sets will prefer to 
+handle sharding or consistent hashing with their own logic&mdash;or may have legacy distribution strategies in 
+place already. One additional feature of this client is the guarantee of handling binary memcache values correctly 
+over the simple ascii protocol. This client does not implement the new binary protocol.</p>
+
+<p>Specifically, this client implements the memcache text protocol specified in the <a href="https://github.com/memcached/memcached/blob/master/doc/protocol.txt">memcached project</a>.</p>
+
+<p>This library does draw inspiration from both 3rd-Eden, elbart, and ddopson: but it is a ground-up rewrite.</p>
+
+<p>See also: <a href="memcache-client.html">the annotated source code</a>, or <a href="https://github.com/overclocked/mc/blob/master/LICENSE">the license</a>.</p>
+
+<a name="status"></a>
+<h3>Status</h3>
+
+<p>Stable Version: 1.0.2</p>
+
+<a name="install"></a>
+<h3>Install</h3>
+
+<div class="cmd">npm install mc</div>
+
+<a name="usage"></a>
+<h3>Usage</h3>
+
+<a name="create"></a>
+<h4>Creation</h4>
+
+<p>The constructor takes three parameters: a server list (or just a server), an adapter, and a strategy. Adapter and Strategy functions are described more thoroughly below.</p>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+var mc = require('mc');
+
+// All defaults
+var cli1 = new mc.Client();
+
+// Default adapter and strategy
+var cli2 = new mc.Client(['2.3.4.5', '3.4.5.6']);
+
+// Single connection, default strategy and off-the-shelf json adapter
+var cli3 = new mc.Client('1.2.3.4', mc.Adapter.json);
+
+// Sharded connection, provided adapter and strategy
+var cli4 = new mc.Client(['1.2.3.4','2.3.4.5'], 
+                         mc.Adapter.raw, mc.Strategy.hash);
+
+// Sharded connection, default adapter, provided strategy
+var cli5 = new mc.Client(['1.2.3.4','2.3.4.5'], null, mc.Strategy.hash);
+]]></script>
+
+<a name="conn"></a>
+<h4>Connection</h4>
+
+<a name="conn-localhost"></a>
+<h5>Single connection to localhost</h5>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+var mc = require('mc');
+var client = new mc.Client();
+client.connect(function() {
+  console.log("Connected to the localhost memcache on port 11211!");
+}
+]]></script>
+
+<a name="conn-host"></a>
+<h5>Single connection to specified host</h5>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+var client = new mc.Client('1.2.3.4');
+client.connect(function() {
+  console.log("Connected to the memcache on host 1.2.3.4 on port 11211!");
+}]]></script>
+
+<a name="conn-default-strategy"></a>
+<h5>Connection to an array of hosts using the default CRC-hash sharding strategy</h5>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+var client = new mc.Client(['1.2.3.4', '2.3.4.5', '3.4.5.6', '4.5.6.7']);
+client.connect(function() {
+  console.log("Connected to memcache on four hosts all on port 11211!");
+}]]></script>
+
+<a name="conn-no-adapter"></a>
+<h5>Connection to an array of hosts using a custom sharding strategy but no adapter</h5>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+var strategy = function(key, max) {
+  return key % max;
+}
+
+var client = new mc.Client(['1.2.3.4'
+                          , '2.3.4.5'
+                          , '3.4.5.6'
+                          , '4.5.6.7']
+                          , null      // No adapter
+                          , strategy  // Custom strategy
+                          );
+client.connect(function() {
+  console.log("Connected to memcache on four hosts all on port 11211!");
+}]]></script>
+
+<a name="error"></a>
+<h4>Error Responses</h4>
+
+<p>All memcache calls take as the last parameter a callback that should in turn accept error and response parameters in that order. The error param will always have a type property, and may also have a description property. Errors may be returned for ordinary conditions such as a key that is not found, or in exceptional cases, such as failure in the server connection.</p>
+
+<a name="write"></a>
+<h4>Write Operations</h4>
+
+<a name="set"></a>
+<h5>Set, Add, Replace, Prepend, Append, CAS</h5>
+
+<p>The following snippet sets with the default options, which may be omitted. Note that the value may be a string or a buffer object. The flags option is not used by memcache; this is a user-space value of 32 bits (or 16 bits some ancient installations). The exptime is the time-to-live terminus in standard unixtime. A '0' exptime indicates no expiration. The add, replace, prepend and append methods are all identical, with the exception of the non-success results, noted below.</p>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+client.set( 'myKey', 'myVal', { flags: 0, exptime: 0}, function(err, status) {
+  if (!err) { 
+    console.log(status); // 'STORED' on success!
+  }
+});
+
+client.add( 'myKey', 'myVal', function(err, response) { // Flags parameter is optional.
+  if (!err) { // Error types can be NOT_STORED
+    console.log(status); // 'STORED' on success!
+  }
+});
+
+client.cas( 'myKey', 'myNewVal', casvalue, {flags: 0, exptime: 0}, function(err, status) {
+  if (!err) { // Error types can be EXISTS, or NOT_FOUND
+    console.log(status); // 'STORED' on success!
+  }
+});
+]]></script>
+
+<p>Success Response:</p>
+
+<ul>
+<li><tt>STORED</tt>: Success. The result was stored.</li>
+</ul>
+
+<p>Failure Responses:</p>
+
+<ul>
+<li><tt>NOT_STORED</tt>: Failure. 'add' was attempted on an existing key, or 'replace' on a non-existent key.</li>
+<li><tt>EXISTS</tt>: Failure. 'cas' was attempted on a key that had been changed since fetch.</li>
+<li><tt>NOT_FOUND</tt>: Failure. 'cas' was attempted on a non-existent key. (Some servers return EXISTS in this case also.)</li>
+</ul>
+
+<a name="incr"></a>
+<h5>Increment, Decrement</h5>
+
+<p>The value parameter in these methods is optional, and defaults to 1. Possible error types: <tt>NOT_FOUND</tt>, when the key does not exist; <tt>CLIENT_ERROR</tt>, when the value is not numeric.
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+client.incr( 'myKey', 2, function(err, value) {
+  if (!err) {
+    console.log(value); // Value returned on success
+  }
+});
+client.decr( 'myKey', function(err, value) { // No value parameter, defaults to 1.
+  if (!err) {
+    console.log(value);
+  }
+));
+]]></script>
+
+<a name="read"></a>
+<h4>Read Operations</h4>
+
+<a name="get"></a>
+<h5>Get, Gets</h5>
+
+<p>Get may take a single key, or an array of keys. Keys may not contain whitespace: a string with whitespace will be interpreted as multiple keys. The return result is always a map of each key to the value generated by the current adapter. The default adapter is the string adapter. The 'gets' method maps keys to an object with two properties: 'val' which maps to the results of the adapter, and 'cas' which contains the unique key.</p>
+
+<p>For more on <a href="#adapters">Adapters</a>, see below.</p>
+
+<p>A couple of samples.</p>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+client.setAdapter(mc.Adapter.string);
+client.get( 'myKey', function(err, response) {
+  if (!err) {
+    console.log(response['myKey']);  // should output a simple string.
+} }
+
+client.gets( 'myKey', function(err, response) {
+  if (!err) {
+    if (response['myKey') {
+      mc.cas( 'myKey', 'myNewVal', response['myKey].cas, { flags: 0, exptime: 0 }, 
+              function (err, status) {
+        if (!err) {
+          console.log(status); // 'STORED' if the calue was not changed by another process.
+} } } } }
+]]></script>
+
+<a name="misc"></a>
+<h4>Miscellaneous</h4>
+
+<a name="version"></a>
+<h5>Version</h5>
+
+<p>Version will return an array of versions for each server in the memcache array.</p>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+client.version( function(err, version) {
+  if (!err) {
+    console.log(version);
+  }
+}
+]]></script>
+
+<p>Output might be:</p>
+
+<div class="cmd">
+[ '1.4.5', '1.4.5', '1.4.6' ]
+</div>
+
+<a name="stats"></a>
+<h5>Stats</h5>
+
+
+<p>All stats calls will return an array of stats values from each of the servers in the array.</p>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+client.stats( function(err, stats) {
+  if (!err) {
+    // E.g.: how many bytes are being stored?
+    // Check your local memcache installation for all the options!
+    console.log(stats[0].bytes);
+  }
+}
+]]></script>
+
+<p>Stats may also take several sub-commands. Currently documented commands are: 'slabs', 'items', and 'sizes'. These subcommands return appropriate datastructures as indicated below. Other stats variants, currently undocumented or not-yet-invented, will be parsed by the default parser.</p>
+
+<a name="subcommands"></a>
+<h5>Stats Subcommands</h5>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+client.stats( 'sizes', function(err, stats) {
+  if (!err) {
+    console.log(stats);
+    // [ { bytes: <bytes>, items: <items> } ]
+  }
+}
+
+client.stats( 'items', function(err, stats) {
+  if (!err) {
+    console.log(stats);
+    // [ { slabs: [ , { number: <items>, age: <age>, ... etc. } ] } ]
+    // Note that slabs is a one-based array.
+  }
+}
+
+client.stats( 'slabs', function(err, stats) {
+  if (!err) {
+    console.log(stats);
+    // [ { active_slabs: <num slabs>, total_malloced: <total mem>, slabs: [ , { chunk_size: <size>, ... } ] } ]
+    // Note that here also, slabs is a one based array.
+  }
+}
+]]></script>
+
+<a name="adapters"></a>
+<h3>Adapters</h3>
+
+
+<p>The client may be configured with a prebuilt or a custom response adapter. The pre-built adapters are:</p>
+
+<ul>
+<li><tt>mc.Adapter.string</tt> [default]</li>
+<li><tt>mc.Adapter.raw</tt></li>
+<li><tt>mc.Adapter.binary</tt></li>
+<li><tt>mc.Adapter.json</tt></li>
+</ul>
+
+<p>The role of an adapter is to format the results of a get or gets call for the convenience of the application.
+This is our least favorite part of the library today, and we are looking at a better implementation to handle
+adapting values on both input and output.</p>
+
+<p>The raw adapter is instructive. It returns:</p>
+
+<div class="cmd">
+{
+  buffer: <the raw byte buffer, for binary values>
+  size:   <the length of the buffer>
+  flags:  <any flags associated with the item>
+  key:    <the key this value is associated with>
+  cas:    <the check number; only returned by gets; used for check-and-set storage>
+}
+</div>
+
+<p>The application my provide any function as an adapter that operates on this raw object and returns whatever other object is suitable for the application. For example, applications might compress the value (although at this time there is no input adapter to balance the equation out, a possible future feature.)</p>
+
+<p>By way of example, the implementation of the json adapter follows:</p>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+Adapter.json = function(results) {
+  try {
+    return JSON.parse(results.buffer.toString('utf8'));      
+  } catch (x) {
+    return { val: results.buffer.toString('utf8') };
+  }
+};
+]]></script>
+
+<p>(And thus, you see, that invalid json will result in an object mapping 'val' to whatever was in memcache.)</p>
+
+<a name="strategies"></a>
+<h3>Strategies</h3>
+
+<p>The default sharding strategy is none for a single connection, or CRC sharding on the key for arrays of more than one. These are available for explicit selection:</p>
+
+<ul>
+<li><tt>mc.Strategy.solo</tt></li>
+<li><tt>mc.Strategy.hash</tt></li>
+</ul>
+
+<p>Custom strategies, however, may be supplied to achieve other sharding policies. The strategy is a function taking two parameters: a key and the size of the array. It must return an integer greater than or equal to zero and less than the max value provided. E.g.:</p>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+function numericShard(key, max) {
+  return key % max;
+}
+]]></script>
+
+<a name="testing"></a>
+<h3>Testing</h3>
+
+<p>Unit tests may be run by executing 'make test'. All methods have basic happy-case and error case coverage. Beyond unit tests, an integration test package, which expects a memcache running locally on port 11211 can be run by the command 'make integration'. These longer running tests exercise the full api in a real-world simulation including network failure scenarios. There is an even longer running app: test/simulation/runlong.js which may be used when testing more complicated network / server failure scenarios.</p>
+
+<a name="changelog"></a>
+<h3>Change Log</h3>
+
+<h4>v 1.0.3</h4>
+<p>Documentation overhaul</p>
+
+<h4>v 1.0.2</h4>
+<p>Bug fix for binary values</p>
+
+<h4>v 1.0.1</h4>
+<p>Fix bug for gets command.</p>
+
+<h4>v 1.0.0</h4>
+<p>Full production testing of version 0.9.0 complete, promoted to ready-for-prime-time.</p>
+
+<h4>v 0.9.0</h4>
+
+<ul>
+<li>Clustering strategies and content adapters now in beta. (See documentation, below.)</li>
+<li>Refactor connection and client logic.</li>
+<li>Rewrite tests for refactored model, better unit division.</li>
+</ul>
+
+<h4>v 0.8.0</h4>
+
+<ul>
+<li>Result adapter model</li>
+<li>JSON Parser</li>
+<li>Binary</li>
+<li>Simple String (Default)</li>
+<li>Raw</li>
+</ul>
+
+<h4>v 0.6.1</h4>
+
+<ul>
+<li>Fix integration tests for multi-get format changes.</li>
+</ul>
+
+<h4>v 0.6.0</h4>
+
+<ul>
+<li>Documentation Complete</li>
+<li>Installation Ready</li>
+<li>Correctly handle network errors</li>
+<li>Protocol implementation:</li>
+<li>stats, incl sub-commands 'slabs', 'items', 'sizes'</li>
+<li>delete</li>
+<li>get/gets</li>
+<li>set/add/replace/append/prepend/cas</li>
+<li>increment/decrement</li>
+<li>version</li>
+<li>Multi-get support</li>
+<li>Correct binary storage/retrieval</li>
+<li>Test framework for unit tests</li>
+<li>Test framework for integration tests</li>
+<li>Default expiration settings</li>
+</ul>
+
+</div>
+</div> <!-- content -->
+</body>
+</html>

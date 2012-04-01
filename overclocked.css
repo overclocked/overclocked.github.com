@@ -13,7 +13,6 @@ caption, tbody, tfoot, thead, tr, th, td {
   font-size: 100%;
   vertical-align: baseline;
   background: transparent;
-  font-family: Verdana, sans-serif;
 }
 
 body {
@@ -51,7 +50,8 @@ table {
 
 /* OVERCLOCKED */
 body {
-  background: #6660A0;
+  background: #E3E0F8;
+  font-family: Verdana, Helvetica, sans-serif;
 }
 
 h1 {
@@ -59,10 +59,19 @@ h1 {
   font-weight: bold;
 }
 
+tt {
+  font-family: Consolas, Courier New, monospace;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
 .header {
   background: #E3E0F8;
-  border-bottom: 1px solid #330044;
   padding: 6px 12px;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  z-index: 100;
 }
 
 .header .hconstrain {
@@ -79,10 +88,12 @@ h1 {
 }
 
 .content {
-  padding: 6px 12px 24px;
+  margin: 0px 12px 24px;
+  padding: 44px 8px 8px;
   background: #EBE9FF;
   border-bottom: 1px solid #330044;
   overflow: hidden;
+  width: 982px;
 }
 
 .product {
@@ -93,7 +104,7 @@ h1 {
 }
 
 .philosophy {
-  width: 380px;
+  width: 362px;
   float: left;
   padding-left: 20px;
   margin-bottom: -1000px;
@@ -120,11 +131,23 @@ h1 {
   font-size: 9pt;
 }
 
+.content ul,
+.content ol,
+.content li,
 .content p {
   font-family: "Palatino Linotype", serif;
   font-size: 11pt;
   padding: 6px 0px 0px;
   text-align: justify;
+}
+
+.content ul {
+  list-style: disc;
+}
+
+.content li {
+  margin-left: 30px;
+  padding-left: 0px;
 }
 
 .component .links {
