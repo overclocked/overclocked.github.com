@@ -1,0 +1,201 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel=stylesheet href='../overclocked.css' type='text/css'>
+  <link rel=stylesheet href='../sh/styles/shCore.css' type='text/css'>
+  <link rel=stylesheet href='../sh/styles/shThemeDefault.css' type='text/css'>
+  <script type="text/javascript" src="../sh/scripts/shCore.js"></script>
+  <script type="text/javascript" src="../sh/scripts/shBrushJScript.js"></script>
+  <script type="text/javascript">
+     SyntaxHighlighter.all()
+  </script> 
+  <link rel=stylesheet href='../docs.css' type='text/css'>
+</head>
+<body>
+<div class="header">
+  <div class="hconstrain">
+    <h1><a href='http://overclocked.com'>overclocked</a></h1>
+    <div class="tagline">Exceeding the Manufacturer's Specifications</div>
+  </div>
+</div>
+
+<div class="content">
+<div id='toc'>
+<h2>Contents</h2>
+<h3><a href='#cm'>Connman</a></h3>
+<h3><a href="#intro">Introduction</a></h3>
+<h3><a href='#status'>Status</a></h3>
+<h3><a href='#install'>Install</a></h3>
+<h3><a href='#usage'>Usage</a></h3>
+<h4><a href='#connectonce'>Connect to a Single Resource</a></h4>
+<h4><a href='#using'>Using your Socket</a></h4>
+<h4><a href='#finding'>Finding your Socket</a></h4>
+<h4><a href='#createpool'>Creating a Pool</a></h4>
+<h4><a href='#findpool'>Finding a Pool</a></h4>
+<h4><a href='#addtopool'>Adding a Connection to a Pool</a></h4>
+<h4><a href='#shutdown'>Shutting Things Down</a></h4>
+<h3><a href='#testing'>Testing</a></h3>
+<h3><a href='#changelog'>Change Log</a></h3>
+</div>
+
+<div id='doc'>
+
+<a name="cm"></a>
+<h2>connman -- A Socket Manager for Node.js</h2>
+
+<a name="intro"></a>
+<h3>Introduction</h3>
+
+<p><tt>connman</tt> is a simple interface to the node.js Socket class that simplifies the common use cases of
+connection management, optimized for long lived persistent connections. Connman handles the business of re-
+establishing broken connections for you, and simplifies event notifications to the bare miniimum so that your
+application can clean up any outstanding business for a dropped connection, and move on as soon as the connection
+is repaired..</p>
+
+<a name="status"></a>
+<h3>Status</h3>
+
+<p>Stable Version: 1.0.0</p>
+
+<a name="install"></a>
+<h3>Install</h3>
+
+<div class="cmd">npm install connman</div>
+
+<a name="usage"></a>
+<h3>Usage</h3>
+
+<a name="connectonce"></a>
+<h4>Connect to a Single Resource</h4>
+
+<p>Setting up a connection has five required parameters. Host and port, obviously. The following three callbacks are the interesting part:</p>
+
+<p><b>onConnect</b> : Called when the initial connection is established. This takes as one parameter node's socket object which the application can use for writing, additional configuration, or adding additional listeners. Connman will already have added all listeners required for handling interesting network abnormalities.</p>
+
+<p><b>onReset</b> : This is called when a network connection is lost. You must provide this, but it may be a no-op if you don't care to do anything. Some applications might want to drop a queue of callbacks waiting for server responses that are now never going to arrive, or suspend writes until the connection is re-established. When onReset passes back a function, this function is called when the connection is re-established. If none is passed back, onConnect will be called again when the connection is re-established.</p>
+
+<p><b>onData</b> : This is called whenever there is new data to be read from the socket. onData takes one parameter - the buffer containing server response.</p>
+
+<p>So:</p>
+
+<p><tt>connect(port, host, onConnect, onData, onReset, [options])</tt></p>
+
+<p>Note that the optional options are the same as in the node.js socket constructor. Most use cases will not need to pass in options.</p>
+
+<p>The following example demonstrates access to a single socket.</p>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+var cm = require('connman');
+
+var sock;
+
+function useSocket() {
+  // Business logic that may involve writing to the socket.
+}
+
+function onData(buff) {
+  // read data from the socket asynchronously.
+}
+
+// Callback to receive a newly created socket.
+function onConnect(socket) {
+  sock = socket;
+  useSocket();
+}
+
+// Callback to handle any cleanup in the case of a network reset...
+// This might be dropping or requeuing outstanding server requests waiting for a reply.
+function onReset() {
+  // Cleanup.
+  return useSocket; // Hand back a new starting point.
+}
+
+cm.connect(11211, 'my.memcache.server.company.com', onConnect, onReset, onData);
+]]></script>
+
+<a name="using"></a>
+<h4>Using your socket.</h4>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+function onData(buffer) {
+  console.log(buffer.toString('utf8');
+}
+function onConnect(socket) {
+  for(var i = 0; i < 100; i++) {
+    socket.write('ping\r\n');
+  }
+}
+]]></script>
+
+<a name="finding"></a>
+<h4>Finding your socket</h4>
+
+<p>If you need to access the socket object, you can always ask connman for it:</p>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+cm.getConnection(port, host);
+]]></script>
+
+<a name="createpool"></a>
+<h4>Creating a pool</p>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+var myPool = cm.createPool('myPool');
+]]></script>
+
+<a name="findpool"></a>
+<h4>Finding a pool</h4>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+var myPool = cm.getPool('myPool');
+]]></script>
+
+<a name="addtopool"></a>
+<h4>Adding a connection to a pool</h4>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+myPool.addConnection(port, host, onConnect, onReset, onData, options);
+]]></script>
+
+<a name="shutdown"></a>
+<h4>Shutting things down</h4>
+
+<p>Note that using the node library's socket.end() will not have the desired effect: the library will just reconnect immediately! Instead, use disconnect().</p>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+// Close an individual socket:
+socket.disconnect();
+
+// Close all sockets in a pool:
+cm.getPool('myConnectionPool').disconnect();
+
+// Close all sockets managed by connman:
+cm.disconnectAll();
+]]></script>
+
+<a name="testing"></a>
+<h3>Testing</h3>
+
+<p>In the test directory there is a simple script '<tt>runTest.sh</tt>' that sets up a flaky echo server,
+and drives traffic to the echo server through both individual connections and a managed pool. Running this
+script should generate no errors, and lots of messages about correct server responses and restarts. This is
+also an additional example of usage.</p>
+
+<a name="changelog"></a>
+<h3>Change Log</h3>
+
+<h4>v 1.0.0</h4>
+
+<ul>
+<li>Documentation Complete</li>
+<li>Test script written, and validated</li>
+<li>Connection recovery logic</li>
+<li>Pool and connection management</li>
+</ul>
+
+</div>
+</div> <!-- content -->
+</body>
+</html>
