@@ -49,10 +49,13 @@
 <h3>Introduction</h3>
 
 <p><tt>connman</tt> is a simple interface to the node.js Socket class that simplifies the common use cases of
-connection management, optimized for long lived persistent connections. Connman handles the business of re-
-establishing broken connections for you, and simplifies event notifications to the bare miniimum so that your
+connection management, optimized for long lived persistent connections. Connman handles the business of 
+re-establishing broken connections for you, and simplifies event notifications to the bare miniimum so that your
 application can clean up any outstanding business for a dropped connection, and move on as soon as the connection
-is repaired..</p>
+is repaired. Best of all, connman does not mediate the socket object, so there is no magic involved, and there is
+no performance impact to using this library.</p>
+
+<p>Also, view the <a href="connman.html">annotated source</a>.</p>
 
 <a name="status"></a>
 <h3>Status</h3>
