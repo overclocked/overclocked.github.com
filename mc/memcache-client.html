@@ -416,7 +416,7 @@ Potentially followed by more of the same.</p>             </td>             <td 
   <span class="p">}</span>
   <span class="k">if</span> <span class="p">(</span><span class="nx">line</span><span class="p">.</span><span class="nx">str</span> <span class="o">&amp;&amp;</span> <span class="nx">line</span><span class="p">.</span><span class="nx">str</span> <span class="o">===</span> <span class="nx">end_str_trunc</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="nx">count</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-      <span class="nx">results</span><span class="p">.</span><span class="nx">error</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;NOT_FOUND&#39;</span><span class="p">,</span> <span class="nx">description</span><span class="o">:</span> <span class="s1">&#39;&#39;</span> <span class="p">};</span>
+      <span class="nx">results</span><span class="p">.</span><span class="nx">error</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;NOT_FOUND&#39;</span><span class="p">,</span> <span class="nx">description</span><span class="o">:</span> <span class="s1">&#39;No Value Available&#39;</span> <span class="p">};</span>
       <span class="nx">results</span><span class="p">.</span><span class="nx">data</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
       <span class="nx">results</span><span class="p">.</span><span class="nx">data</span> <span class="o">=</span> <span class="nx">data</span><span class="p">;</span>
@@ -437,7 +437,7 @@ Potentially followed by more of the same.</p>             </td>             <td 
     <span class="k">case</span> <span class="s1">&#39;NOT_STORED&#39;</span><span class="o">:</span>
       <span class="nx">results</span><span class="p">.</span><span class="nx">error</span> <span class="o">=</span> <span class="p">{};</span>
       <span class="nx">results</span><span class="p">.</span><span class="nx">error</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="nx">line</span><span class="p">.</span><span class="nx">str</span><span class="p">;</span>
-      <span class="nx">results</span><span class="p">.</span><span class="nx">error</span><span class="p">.</span><span class="nx">description</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+      <span class="nx">results</span><span class="p">.</span><span class="nx">error</span><span class="p">.</span><span class="nx">description</span> <span class="o">=</span> <span class="s1">&#39;Action Not Permitted&#39;</span><span class="p">;</span>
       <span class="k">break</span><span class="p">;</span>
     <span class="k">default</span><span class="o">:</span>
       <span class="nx">results</span><span class="p">.</span><span class="nx">data</span> <span class="o">=</span> <span class="nx">line</span><span class="p">.</span><span class="nx">str</span><span class="p">;</span>
@@ -451,7 +451,7 @@ Potentially followed by more of the same.</p>             </td>             <td 
     <span class="k">if</span> <span class="p">(</span><span class="nx">line</span><span class="p">.</span><span class="nx">str</span> <span class="o">==</span> <span class="s1">&#39;NOT_FOUND&#39;</span><span class="p">)</span> <span class="p">{</span>
       <span class="nx">results</span><span class="p">.</span><span class="nx">error</span> <span class="o">=</span> <span class="p">{};</span>
       <span class="nx">results</span><span class="p">.</span><span class="nx">error</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="nx">line</span><span class="p">.</span><span class="nx">str</span><span class="p">;</span>
-      <span class="nx">results</span><span class="p">.</span><span class="nx">error</span><span class="p">.</span><span class="nx">description</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+      <span class="nx">results</span><span class="p">.</span><span class="nx">error</span><span class="p">.</span><span class="nx">description</span> <span class="o">=</span> <span class="s1">&#39;Numeric Response Not Found&#39;</span><span class="p">;</span>
       <span class="nx">results</span><span class="p">.</span><span class="nx">data</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
     <span class="p">}</span>
     <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">line</span><span class="p">.</span><span class="nx">str</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;CLIENT_ERROR&#39;</span><span class="p">)</span> <span class="p">{</span>
