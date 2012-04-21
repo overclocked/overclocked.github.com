@@ -31,10 +31,11 @@
 <h3><a href='#usage'>Usage</a></h3>
 <h4><a href='#connectonce'>Connect to a Single Resource</a></h4>
 <h4><a href='#using'>Using your Socket</a></h4>
-<h4><a href='#finding'>Finding your Socket</a></h4>
 <h4><a href='#createpool'>Creating a Pool</a></h4>
 <h4><a href='#findpool'>Finding a Pool</a></h4>
 <h4><a href='#addtopool'>Adding a Connection to a Pool</a></h4>
+<h4><a href='#getconn'>Getting a Connection from a Pool</a></h4>
+<h4><a href='#gethandler'>Getting a Handler from a Pool</a></h4>
 <h4><a href='#shutdown'>Shutting Things Down</a></h4>
 <h3><a href='#testing'>Testing</a></h3>
 <h3><a href='#changelog'>Change Log</a></h3>
@@ -60,7 +61,7 @@ no performance impact to using this library.</p>
 <a name="status"></a>
 <h3>Status</h3>
 
-<p>Stable Version: 1.0.0</p>
+<p>Stable Version: 2.0.0</p>
 
 <a name="install"></a>
 <h3>Install</h3>
@@ -73,79 +74,84 @@ no performance impact to using this library.</p>
 <a name="connectonce"></a>
 <h4>Connect to a Single Resource</h4>
 
-<p>Setting up a connection has five required parameters. Host and port, obviously. The following three callbacks are the interesting part:</p>
+<p>Setting up a connection requires three parameters: Host, Port, and Handler. The fourth parameter, options, can be
+provided to hand to the node.js socket construction call.</p>
 
-<p><b>onConnect</b> : Called when the initial connection is established. This takes as one parameter node's socket object which the application can use for writing, additional configuration, or adding additional listeners. Connman will already have added all listeners required for handling interesting network abnormalities.</p>
+<p>The handler must implement four methods:</p>
 
-<p><b>onReset</b> : This is called when a network connection is lost. You must provide this, but it may be a no-op if you don't care to do anything. Some applications might want to drop a queue of callbacks waiting for server responses that are now never going to arrive, or suspend writes until the connection is re-established. When onReset passes back a function, this function is called when the connection is re-established. If none is passed back, onConnect will be called again when the connection is re-established.</p>
+<ul>
+<li><b><tt>onConnect(socket)</tt></b> : This will be called once, upon initial, successful connection.</li>
+<li><b><tt>onReset()</tt></b>         : This will be called any time the network connection is dropped.</li>
+<li><b><tt>onReconnect()</tt></b>     : This will be called any time the network connection is restored.</li>
+<li><b><tt>onData(buffer)</tt></b>    : This will be called any time there is new data available from the connection.</li>
 
-<p><b>onData</b> : This is called whenever there is new data to be read from the socket. onData takes one parameter - the buffer containing server response.</p>
+<p>Any of these methods may be no-ops, but between the time onReset and onReconnect are called, the socket passed to
+onConnect will probably throw exceptions. Also note, any results expected from the other end of the connection at
+the time onReset is called will be lost, and should either be dealt with or retransmitted after onReconnect.</p>
 
 <p>So:</p>
 
-<p><tt>connect(port, host, onConnect, onData, onReset, [options])</tt></p>
+<p><tt>connect(port, host, handler, [options])</tt></p>
 
-<p>Note that the optional options are the same as in the node.js socket constructor. Most use cases will not need to pass in options.</p>
+<p>Note that the optional options are the same as in the node.js socket constructor. Most use cases will not need to
+pass in options.</p>
 
 <p>The following example demonstrates access to a single socket.</p>
 
 <script type="syntaxhighlighter" class="brush: js"><![CDATA[
-var cm = require('connman');
+    var cm = require('connman');
 
-var sock;
+    var sock;
 
-function useSocket() {
-  // Business logic that may involve writing to the socket.
-}
+    function Conn() {
+      this.sock = null;
+    }
 
-function onData(buff) {
-  // read data from the socket asynchronously.
-}
+    Conn.prototype.onData(buff) {
+      // read from the socket asynchronously.
+    }
 
-// Callback to receive a newly created socket.
-function onConnect(socket) {
-  sock = socket;
-  useSocket();
-}
+    Conn.prototype.onConnect(socket) {
+      this.sock = socket;
+      useSocket();
+    }
 
-// Callback to handle any cleanup in the case of a network reset...
-// This might be dropping or requeuing outstanding server requests waiting for a reply.
-function onReset() {
-  // Cleanup.
-  return useSocket; // Hand back a new starting point.
-}
+    Conn.prototype.onReset() {
+      stopSocket();
+    }
 
-cm.connect(11211, 'my.memcache.server.company.com', onConnect, onReset, onData);
+    Conn.prototype.onReconnect() {
+      useSocket();
+    }
+
+    cm.connect(11211, 'my.memcache.server.company.com', new Conn());
 ]]></script>
 
 <a name="using"></a>
 <h4>Using your socket.</h4>
 
 <script type="syntaxhighlighter" class="brush: js"><![CDATA[
-function onData(buffer) {
-  console.log(buffer.toString('utf8');
-}
-function onConnect(socket) {
-  for(var i = 0; i < 100; i++) {
-    socket.write('ping\r\n');
-  }
-}
-]]></script>
-
-<a name="finding"></a>
-<h4>Finding your socket</h4>
-
-<p>If you need to access the socket object, you can always ask connman for it:</p>
-
-<script type="syntaxhighlighter" class="brush: js"><![CDATA[
-cm.getConnection(port, host);
+    Conn.prototype.onData(buffer) {
+      console.log(buffer.toString('utf8');
+    }
+    Conn.prototype.onConnect(socket) {
+      for(var i = 0; i < 100; i++) {
+        socket.write('ping\r\n');
+      }
+    }
 ]]></script>
 
 <a name="createpool"></a>
 <h4>Creating a pool</p>
 
+<p>A pool takes a function that can create handler objects:</p>
+
 <script type="syntaxhighlighter" class="brush: js"><![CDATA[
-var myPool = cm.createPool('myPool');
+    function handlerFactory() {
+      return new Conn();
+    }
+
+    var myPool = cm.createPool('myPool', handlerFactory);
 ]]></script>
 
 <a name="findpool"></a>
@@ -159,7 +165,25 @@ var myPool = cm.getPool('myPool');
 <h4>Adding a connection to a pool</h4>
 
 <script type="syntaxhighlighter" class="brush: js"><![CDATA[
-myPool.addConnection(port, host, onConnect, onReset, onData, options);
+myPool.addConnection(port, host, options);
+]]></script>
+
+<a name="getconn"></a>
+<h4>Getting a Connection from a Pool</h4>
+
+<p>Connections are added to the pool in order, and may be accesed by index:</p>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+    var socket = myPool.getConnection(3);
+]]></script>
+
+<a name="gethandler"></a>
+<h4>Getting a Handler from a Pool</h4>
+
+<p>Likewise, handlers may be accessed:</p>
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+    var handler = myPool.getHandler(3);
 ]]></script>
 
 <a name="shutdown"></a>
