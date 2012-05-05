@@ -35,6 +35,7 @@
 <h5><a href='#conn-host'>... to specified host</a></h5>
 <h5><a href='#conn-default-strategy'>... to an array of hosts</a></h5>
 <h5><a href='#conn-no-adapter'>.. without an adapter</a></h5>
+<h4><a href='#disconnect'>Disconnect</a></h4>
 <h4><a href='#error'>Error Responses</a></h4>
 <h4><a href='#write'>Write Operations</a></h4>
 <h5><a href='#set'>Set, CAS, etc.</a></h5>
@@ -74,7 +75,9 @@ memcache values correctly over the simple ascii protocol. This client does not i
 <a name="status"></a>
 <h3>Status</h3>
 
-<p>Stable Version: 1.0.5</p>
+<p>Stable Version: 1.0.6</p>
+
+<p><b>Note</b>: A major reworking to support the memcache binary protocol is underway. During this reworking, I saw what looks to be a fairly major problem in multigets across sharded clients. I would welcome a patch for that to the current 1.0.6 code base, but since I'm neck deep in the binary stuff don't intend to correct it now. If anyone is blocked on this, let me know. I could reprioritize.</p>
 
 <a name="install"></a>
 <h3>Install</h3>
@@ -158,6 +161,16 @@ var client = new mc.Client(['1.2.3.4'
                           );
 client.connect(function() {
   console.log("Connected to memcache on four hosts all on port 11211!");
+}]]></script>
+
+<a hame="disconnect"></a>
+<h4>Disconnect</h4>
+
+<p>To disconnect from all memcache clients:</p>
+
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+mc.disconnect();
 }]]></script>
 
 <a name="error"></a>
